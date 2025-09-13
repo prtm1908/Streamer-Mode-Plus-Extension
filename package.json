@@ -1,0 +1,71 @@
+{
+  "name": "streaming-mode-extension",
+  "displayName": "Streaming Mode",
+  "description": "Automatically detects streaming software and masks sensitive .env file content",
+  "version": "0.0.1",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "streamingMode.toggle",
+        "title": "Toggle Streaming Mode"
+      },
+      {
+        "command": "streamingMode.enable",
+        "title": "Enable Streaming Mode"
+      },
+      {
+        "command": "streamingMode.disable",
+        "title": "Disable Streaming Mode"
+      }
+    ],
+    "configuration": {
+      "title": "Streaming Mode",
+      "properties": {
+        "streamingMode.autoDetect": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically detect streaming software"
+        },
+        "streamingMode.detectionInterval": {
+          "type": "number",
+          "default": 5000,
+          "description": "Detection interval in milliseconds"
+        },
+        "streamingMode.streamingProcesses": {
+          "type": "array",
+          "default": [
+            "obs",
+            "obs64",
+            "streamlabs obs",
+            "streamlabs desktop",
+            "xsplit"
+          ],
+          "description": "List of process names to detect as streaming software (exact match, case-insensitive; .exe/.app stripped)"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "16.x",
+    "typescript": "^4.9.4"
+  },
+  "dependencies": {
+    "ps-list": "^8.1.1"
+  }
+}
