@@ -1,11 +1,12 @@
 # Streaming Mode Extension
 
-A VS Code extension that automatically detects streaming software and masks sensitive content in `.env` files to protect secrets during live coding sessions.
+A VS Code extension that automatically detects streaming software and masks sensitive content in `.env` files and high-entropy API keys in code to protect secrets during live coding sessions.
 
 ## Features
 
 - **Automatic Detection**: Monitors running processes to detect popular streaming software like OBS Studio, Streamlabs, and XSplit.
-- **Smart Masking**: Automatically blurs/masks values in `.env` files while keeping variable names visible
+- **Smart Masking (.env)**: Automatically blurs/masks values in `.env` files while keeping variable names visible
+- **Secret Masking (code)**: Detects and masks high-entropy secrets assigned to sensitive keys (e.g., `api_key`, `token`, `secret`, `credential`, `auth`) in any file based on a ruleset inspired by GitGuardian’s Generic High Entropy detector
 - **Manual Toggle**: Status bar button to manually enable/disable streaming mode
 - **Configurable**: Customize detection settings and streaming software list
 
@@ -13,7 +14,9 @@ A VS Code extension that automatically detects streaming software and masks sens
 
 1. **Process Detection**: The extension periodically scans running processes for known streaming applications
 2. **Auto-Activation**: When streaming software is detected, it automatically enables streaming mode
-3. **Content Masking**: `.env` file values are masked with dots (••••••••••••) while keeping the variable names visible
+3. **Content Masking**: 
+   - `.env` file values are masked with dots (••••••••••••) while keeping the variable names visible
+   - High-entropy secrets in code are detected and only the secret substring is masked
 4. **Visual Feedback**: Status bar shows current streaming mode state with eye icons
 
 ## Commands
@@ -62,6 +65,22 @@ The extension automatically masks content in files with these patterns:
 - `.env.production`
 - `.env.test`
 - Any file containing `.env.` in the name
+
+Additionally, high-entropy secret masking runs across all open text documents to catch code-side assignments.
+
+## Secret Detection Rules (Code)
+
+The secret detector focuses on assignments where the assigned identifier contains one of: `secret`, `token`, `api[_.-]?key`, `credential`, or `auth`. It considers assignment tokens `:`, `=`, `:=`, `=>`, `,`, `(`, and `<-`, covering patterns such as:
+
+- Variable/property assignments: `api_key = "..."`, `secret: value`, `token := value`, `object['auth'] = "..."`, `{"credential": "..."}`
+- Function patterns: `o.set("auth", "...")`, `set_apikey("...")`
+
+Values must pass high-entropy checks similar to GitGuardian’s Generic High Entropy detector:
+- Match a constrained charset/length with specific backslash rules
+- Shannon entropy ≥ 3 and contain ≥ 2 digits
+- Pass value and context banlists to reduce false positives
+
+Masking is visual-only and targets only the matched secret substring.
 
 ## Privacy & Security
 

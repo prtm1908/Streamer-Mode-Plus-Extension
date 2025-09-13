@@ -27,8 +27,10 @@ exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const streamingDetector_1 = require("./streamingDetector");
 const envMasker_1 = require("./envMasker");
+const secretMasker_1 = require("./secretMasker");
 let streamingDetector;
 let envMasker;
+let secretMasker;
 let statusBarItem;
 let isStreamingModeEnabled = false;
 function activate(context) {
@@ -36,6 +38,7 @@ function activate(context) {
     // Initialize components
     streamingDetector = new streamingDetector_1.StreamingDetector();
     envMasker = new envMasker_1.EnvMasker();
+    secretMasker = new secretMasker_1.SecretMasker();
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
     statusBarItem.command = 'streamingMode.toggle';
@@ -62,14 +65,22 @@ function activate(context) {
     const documentListener = vscode.workspace.onDidOpenTextDocument(document => {
         if (isStreamingModeEnabled) {
             envMasker.maskDocument(document);
+            secretMasker.maskDocument(document);
         }
     });
     const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(editor => {
         if (isStreamingModeEnabled && editor) {
             envMasker.maskDocument(editor.document);
+            secretMasker.maskDocument(editor.document);
         }
     });
-    context.subscriptions.push(documentListener, activeEditorListener);
+    const changeListener = vscode.workspace.onDidChangeTextDocument(event => {
+        if (isStreamingModeEnabled) {
+            envMasker.maskDocument(event.document);
+            secretMasker.maskDocument(event.document);
+        }
+    });
+    context.subscriptions.push(documentListener, activeEditorListener, changeListener);
     // Initialize status bar
     updateStatusBar();
     // Start streaming detection if auto-detect is enabled
@@ -106,11 +117,13 @@ function setStreamingMode(enabled) {
         // Mask all open .env files
         vscode.workspace.textDocuments.forEach(document => {
             envMasker.maskDocument(document);
+            secretMasker.maskDocument(document);
         });
     }
     else {
         // Unmask all files
         envMasker.unmaskAll();
+        secretMasker.unmaskAll();
     }
     updateStatusBar();
 }
@@ -133,6 +146,9 @@ function deactivate() {
     }
     if (envMasker) {
         envMasker.dispose();
+    }
+    if (secretMasker) {
+        secretMasker.dispose();
     }
 }
 exports.deactivate = deactivate;

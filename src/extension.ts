@@ -1,9 +1,11 @@
 import * as vscode from 'vscode';
 import { StreamingDetector } from './streamingDetector';
 import { EnvMasker } from './envMasker';
+import { SecretMasker } from './secretMasker';
 
 let streamingDetector: StreamingDetector;
 let envMasker: EnvMasker;
+let secretMasker: SecretMasker;
 let statusBarItem: vscode.StatusBarItem;
 let isStreamingModeEnabled = false;
 
@@ -13,6 +15,7 @@ export function activate(context: vscode.ExtensionContext) {
     // Initialize components
     streamingDetector = new StreamingDetector();
     envMasker = new EnvMasker();
+    secretMasker = new SecretMasker();
 
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
@@ -47,16 +50,25 @@ export function activate(context: vscode.ExtensionContext) {
     const documentListener = vscode.workspace.onDidOpenTextDocument(document => {
         if (isStreamingModeEnabled) {
             envMasker.maskDocument(document);
+            secretMasker.maskDocument(document);
         }
     });
 
     const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(editor => {
         if (isStreamingModeEnabled && editor) {
             envMasker.maskDocument(editor.document);
+            secretMasker.maskDocument(editor.document);
         }
     });
 
-    context.subscriptions.push(documentListener, activeEditorListener);
+    const changeListener = vscode.workspace.onDidChangeTextDocument(event => {
+        if (isStreamingModeEnabled) {
+            envMasker.maskDocument(event.document);
+            secretMasker.maskDocument(event.document);
+        }
+    });
+
+    context.subscriptions.push(documentListener, activeEditorListener, changeListener);
 
     // Initialize status bar
     updateStatusBar();
@@ -97,10 +109,12 @@ function setStreamingMode(enabled: boolean) {
         // Mask all open .env files
         vscode.workspace.textDocuments.forEach(document => {
             envMasker.maskDocument(document);
+            secretMasker.maskDocument(document);
         });
     } else {
         // Unmask all files
         envMasker.unmaskAll();
+        secretMasker.unmaskAll();
     }
     
     updateStatusBar();
@@ -125,5 +139,8 @@ export function deactivate() {
     }
     if (envMasker) {
         envMasker.dispose();
+    }
+    if (secretMasker) {
+        secretMasker.dispose();
     }
 }
