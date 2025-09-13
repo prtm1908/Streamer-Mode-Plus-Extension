@@ -45,9 +45,7 @@ class GenericSecretDetector {
         const findings = [];
         for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
             const line = document.lineAt(lineIndex).text;
-            // Always check for standalone high-entropy secrets
-            this.matchStandaloneAnywhere(document, lineIndex, line, findings);
-            // If line contains a sensitive key, also try assignment-based rules
+            // Only analyze lines that contain a sensitive identifier keyword
             if (GenericSecretDetector.sensitiveKey.test(line)) {
                 this.matchIdentifierAssignment(document, lineIndex, line, findings);
                 this.matchJsonPropertyAssignment(document, lineIndex, line, findings);
@@ -58,26 +56,8 @@ class GenericSecretDetector {
         }
         return findings;
     }
-    // Standalone detector: find high-entropy secrets anywhere in the line
-    matchStandaloneAnywhere(document, lineIndex, line, findings) {
-        const re = new RegExp(String.raw `[A-Za-z0-9_.+\/~$-](?:[A-Za-z0-9_.+\/=~$-]|\\(?![ntr"])){14,1022}[A-Za-z0-9_.+\/=~$-]`, 'g');
-        let m;
-        while ((m = re.exec(line)) !== null) {
-            const value = m[0];
-            const startCol = m.index;
-            const endCol = startCol + value.length;
-            const leftCtx = line.slice(Math.max(0, startCol - 30), startCol);
-            const rightCtx = line.slice(endCol, Math.min(line.length, endCol + 30));
-            if (this.isValidSecret(value, leftCtx, rightCtx, '')) {
-                findings.push({
-                    range: new vscode.Range(new vscode.Position(lineIndex, startCol), new vscode.Position(lineIndex, endCol)),
-                    value,
-                    assignedIdentifier: '',
-                    source: 'standalone'
-                });
-            }
-        }
-    }
+    // Standalone detection intentionally removed to match the spec:
+    // only assignments or API-key-related contexts are considered.
     matchIdentifierAssignment(document, lineIndex, line, findings) {
         // e.g. my_secret := value, api_key = value, token: value, secret <- value, LAVDA_KEY = value
         const idRegex = new RegExp('([A-Za-z_][A-Za-z0-9_.-]*?' + GenericSecretDetector.sensitiveKeyPattern + '[A-Za-z0-9_.-]*)', 'gi');
@@ -275,10 +255,13 @@ class GenericSecretDetector {
         const digitCount = (value.match(/\d/g) || []).length;
         if (digitCount < GenericSecretDetector.minDigits)
             return false;
-        // Value banlist
-        for (const r of GenericSecretDetector.valueBanlist) {
-            if (r.test(value))
-                return false;
+        // Value banlist (skip if value clearly matches a known API key format)
+        const matchesKnownKey = GenericSecretDetector.knownKeyPatterns.some(r => r.test(value));
+        if (!matchesKnownKey) {
+            for (const r of GenericSecretDetector.valueBanlist) {
+                if (r.test(value))
+                    return false;
+            }
         }
         // Context banlists
         for (const r of GenericSecretDetector.contextBanlistLeft) {
@@ -330,7 +313,7 @@ class GenericSecretDetector {
 }
 exports.GenericSecretDetector = GenericSecretDetector;
 // Sensitive identifier keywords as a reusable string pattern
-// Includes suffix-delimited KEY (e.g., SOME_KEY), while avoiding words like "monkey" via word boundary
+// Spec keywords plus common suffix-delimited KEY (e.g., SOME_KEY), avoiding 'monkey' via boundary
 GenericSecretDetector.sensitiveKeyPattern = '(?:secret|token|api[_.-]?key|credential|auth|[_.-]key\\b)';
 GenericSecretDetector.sensitiveKey = new RegExp(GenericSecretDetector.sensitiveKeyPattern, 'i');
 // Assignment tokens to consider (order matters for multi-char tokens)
@@ -340,6 +323,11 @@ GenericSecretDetector.assignmentTokens = [":=", "=>", "<-", ":", "="];
 GenericSecretDetector.valueRegex = new RegExp(String.raw `^[A-Za-z0-9_.+\/~$-](?:[A-Za-z0-9_.+\/=~$-]|\\(?![ntr"])){14,1022}[A-Za-z0-9_.+\/=~$-]$`);
 // Post validators
 GenericSecretDetector.minDigits = 2;
+// Known API key/token patterns to override conservative banlists (e.g., 'fake', 'example')
+GenericSecretDetector.knownKeyPatterns = [
+    /^sk-[A-Za-z0-9_-]{16,}$/,
+    /^gsk_[A-Za-z0-9_-]{16,}$/, // Groq-style keys
+];
 GenericSecretDetector.valueBanlist = [
     /^id[_.-]/i,
     /^mid[_.-]/i,
