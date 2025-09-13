@@ -3,12 +3,31 @@
   "displayName": "Streaming Mode",
   "description": "Automatically detects streaming software and masks sensitive .env file content",
   "version": "0.0.1",
+  "publisher": "GeekRoom",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": [
     "Other"
   ],
+  "keywords": [
+    "streaming",
+    "privacy",
+    "security",
+    "env",
+    "environment",
+    "obs",
+    "streamlabs"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/prtm1908/vscode-streaming-mode-extension.git"
+  },
+  "homepage": "https://github.com/prtm1908/vscode-streaming-mode-extension",
+  "bugs": {
+    "url": "https://github.com/prtm1908/vscode-streaming-mode-extension/issues"
+  },
+  "license": "MIT",
   "activationEvents": [
     "onStartupFinished"
   ],
