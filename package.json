@@ -1,12 +1,13 @@
 {
   "name": "streaming-mode-extension",
-  "displayName": "Streaming Mode",
+  "displayName": "Streamer Mode Plus",
   "description": "Automatically detects streaming software and masks sensitive .env file content",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "publisher": "GeekRoom",
   "engines": {
     "vscode": "^1.74.0"
   },
+  "icon": "logo.png",
   "categories": [
     "Other"
   ],
@@ -36,23 +37,23 @@
     "commands": [
       {
         "command": "streamingMode.menu",
-        "title": "Streaming Mode: Menu"
+        "title": "Streamer Mode: Menu"
       },
       {
         "command": "streamingMode.toggle",
-        "title": "Toggle Streaming Mode"
+        "title": "Toggle Streamer Mode"
       },
       {
         "command": "streamingMode.enable",
-        "title": "Enable Streaming Mode"
+        "title": "Enable Streamer Mode"
       },
       {
         "command": "streamingMode.disable",
-        "title": "Disable Streaming Mode"
+        "title": "Disable Streamer Mode"
       }
     ],
     "configuration": {
-      "title": "Streaming Mode",
+      "title": "Streamer Mode",
       "properties": {
         "streamingMode.autoDetect": {
           "type": "boolean",

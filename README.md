@@ -1,4 +1,4 @@
-# Streaming Mode Extension
+# Streamer Mode Plus Extension
 
 A VS Code extension that automatically detects streaming software and masks sensitive content in `.env` files and high-entropy API keys in code to protect secrets during live coding sessions.
 
@@ -7,30 +7,30 @@ A VS Code extension that automatically detects streaming software and masks sens
 - **Automatic Detection**: Monitors running processes to detect popular streaming software like OBS Studio, Streamlabs, and XSplit.
 - **Smart Masking (.env)**: By default, only masks detected API keys and high‑entropy secrets in `.env` files (keeps regular values like names, ports visible). Optionally, enable “Hide all environment variables” to mask all values.
 - **Secret Masking (code)**: Detects and masks high-entropy secrets assigned to sensitive keys (e.g., `api_key`, `token`, `secret`, `credential`, `auth`) in any file based on a ruleset inspired by GitGuardian’s Generic High Entropy detector
-- **Manual Toggle**: Status bar button to manually enable/disable streaming mode
+- **Manual Toggle**: Status bar button to manually enable/disable streamer mode
 - **Configurable**: Customize detection settings and streaming software list
 
 ## How It Works
 
 1. **Process Detection**: The extension periodically scans running processes for known streaming applications
-2. **Auto-Activation**: When streaming software is detected, it automatically enables streaming mode
+2. **Auto-Activation**: When streaming software is detected, it automatically enables streamer mode
 3. **Content Masking**: 
    - `.env` files: By default, only API keys/high‑entropy secrets are masked. Use the status bar menu to enable “Hide all environment variables” and mask all values.
    - Code files: High-entropy secrets are detected and only the secret substring is masked
-4. **Visual Feedback**: Status bar shows current streaming mode state with eye icons
+4. **Visual Feedback**: Status bar shows current streamer mode state with eye icons
 
 ## Commands
 
-- `Streaming Mode: Menu` (status bar) — opens a menu with:
-  - Toggle Streaming Mode (on/off)
+- `Streamer Mode: Menu` (status bar) — opens a menu with:
+  - Toggle Streamer Mode (on/off)
   - Hide all environment variables (checkbox)
-- `Toggle Streaming Mode` - Manually toggle streaming mode on/off
-- `Enable Streaming Mode` - Force enable streaming mode
-- `Disable Streaming Mode` - Force disable streaming mode
+- `Toggle Streamer Mode` - Manually toggle streamer mode on/off
+- `Enable Streamer Mode` - Force enable streamer mode
+- `Disable Streamer Mode` - Force disable streamer mode
 
 ## Configuration
 
-Access these settings via VS Code Settings (search for "Streaming Mode"):
+Access these settings via VS Code Settings (search for "Streamer Mode"):
 
 - `streamingMode.autoDetect` (default: `true`) - Automatically detect streaming software
 - `streamingMode.detectionInterval` (default: `5000`) - Detection interval in milliseconds  
@@ -95,7 +95,7 @@ Masking is visual-only and targets only the matched secret substring.
 ## Status Bar
 
 The status bar shows:
-- `👁 Streaming` - Streaming mode OFF
-- `🙈 Streaming` - Streaming mode ON (with warning background)
+- `👁 Streaming` - Streamer mode OFF
+- `🙈 Streaming` - Streamer mode ON (with warning background)
 
-Click the status bar item to toggle streaming mode manually.
+Click the status bar item to toggle streamer mode manually.

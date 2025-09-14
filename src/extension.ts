@@ -11,7 +11,7 @@ let isStreamingModeEnabled = false;
 let hideAllEnvVariables = false;
 
 export function activate(context: vscode.ExtensionContext) {
-    console.log('Streaming Mode extension is now active!');
+    console.log('Streamer Mode extension is now active!');
 
     // Initialize components
     streamingDetector = new StreamingDetector();
@@ -82,7 +82,7 @@ export function activate(context: vscode.ExtensionContext) {
         streamingDetector.checkStreamingStatus().then(isStreaming => {
             if (isStreaming) {
                 setStreamingMode(true);
-                vscode.window.showInformationMessage('Streaming software detected - Streaming Mode enabled');
+                vscode.window.showInformationMessage('Streaming software detected - Streamer Mode enabled');
             }
             
             // Start continuous detection
@@ -90,9 +90,9 @@ export function activate(context: vscode.ExtensionContext) {
                 if (isStreamingNow !== isStreamingModeEnabled) {
                     setStreamingMode(isStreamingNow);
                     if (isStreamingNow) {
-                        vscode.window.showInformationMessage('Streaming software detected - Streaming Mode enabled');
+                        vscode.window.showInformationMessage('Streaming software detected - Streamer Mode enabled');
                     } else {
-                        vscode.window.showInformationMessage('Streaming software stopped - Streaming Mode disabled');
+                        vscode.window.showInformationMessage('Streaming software stopped - Streamer Mode disabled');
                     }
                 }
             });
@@ -135,7 +135,7 @@ function applyMaskingForDocument(document: vscode.TextDocument) {
 }
 
 async function showStatusBarMenu() {
-    const streamingLabel = isStreamingModeEnabled ? 'Disable Streaming Mode' : 'Enable Streaming Mode';
+    const streamingLabel = isStreamingModeEnabled ? 'Disable Streamer Mode' : 'Enable Streamer Mode';
     const hideAllLabel = `${hideAllEnvVariables ? '$(check)' : '$(circle-large-outline)'} Hide all environment variables`;
 
     const items: (vscode.QuickPickItem & { id: string })[] = [
@@ -144,7 +144,7 @@ async function showStatusBarMenu() {
     ];
 
     const picked = await vscode.window.showQuickPick(items, {
-        placeHolder: 'Streaming Mode options',
+        placeHolder: 'Streamer Mode options',
         canPickMany: false
     });
     if (!picked) return;
@@ -169,11 +169,11 @@ function updateStatusBar() {
     if (isStreamingModeEnabled) {
         const envSuffix = hideAllEnvVariables ? ' (env: all)' : '';
         statusBarItem.text = `$(eye-closed) Streaming${envSuffix}`;
-        statusBarItem.tooltip = 'Streaming Mode: ON - Click to open menu';
+        statusBarItem.tooltip = 'Streamer Mode: ON - Click to open menu';
         statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     } else {
         statusBarItem.text = '$(eye) Streaming';
-        statusBarItem.tooltip = 'Streaming Mode: OFF - Click to open menu';
+        statusBarItem.tooltip = 'Streamer Mode: OFF - Click to open menu';
         statusBarItem.backgroundColor = undefined;
     }
     statusBarItem.show();
