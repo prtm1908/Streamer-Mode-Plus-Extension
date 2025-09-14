@@ -27,22 +27,29 @@ exports.deactivate = exports.activate = void 0;
 const vscode = __importStar(require("vscode"));
 const streamingDetector_1 = require("./streamingDetector");
 const envMasker_1 = require("./envMasker");
+const secretMasker_1 = require("./secretMasker");
 let streamingDetector;
 let envMasker;
+let secretMasker;
 let statusBarItem;
 let isStreamingModeEnabled = false;
+let hideAllEnvVariables = false;
 function activate(context) {
     console.log('Streaming Mode extension is now active!');
     // Initialize components
     streamingDetector = new streamingDetector_1.StreamingDetector();
     envMasker = new envMasker_1.EnvMasker();
+    secretMasker = new secretMasker_1.SecretMasker();
     // Create status bar item
     statusBarItem = vscode.window.createStatusBarItem(vscode.StatusBarAlignment.Right, 100);
-    statusBarItem.command = 'streamingMode.toggle';
+    statusBarItem.command = 'streamingMode.menu';
     context.subscriptions.push(statusBarItem);
     // Register commands
     const toggleCommand = vscode.commands.registerCommand('streamingMode.toggle', () => {
         toggleStreamingMode();
+    });
+    const menuCommand = vscode.commands.registerCommand('streamingMode.menu', async () => {
+        await showStatusBarMenu();
     });
     const enableCommand = vscode.commands.registerCommand('streamingMode.enable', () => {
         setStreamingMode(true);
@@ -50,7 +57,7 @@ function activate(context) {
     const disableCommand = vscode.commands.registerCommand('streamingMode.disable', () => {
         setStreamingMode(false);
     });
-    context.subscriptions.push(toggleCommand, enableCommand, disableCommand);
+    context.subscriptions.push(toggleCommand, enableCommand, disableCommand, menuCommand);
     // Listen for configuration changes
     const configListener = vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('streamingMode')) {
@@ -61,15 +68,20 @@ function activate(context) {
     // Listen for document changes
     const documentListener = vscode.workspace.onDidOpenTextDocument(document => {
         if (isStreamingModeEnabled) {
-            envMasker.maskDocument(document);
+            applyMaskingForDocument(document);
         }
     });
     const activeEditorListener = vscode.window.onDidChangeActiveTextEditor(editor => {
         if (isStreamingModeEnabled && editor) {
-            envMasker.maskDocument(editor.document);
+            applyMaskingForDocument(editor.document);
         }
     });
-    context.subscriptions.push(documentListener, activeEditorListener);
+    const changeListener = vscode.workspace.onDidChangeTextDocument(event => {
+        if (isStreamingModeEnabled) {
+            applyMaskingForDocument(event.document);
+        }
+    });
+    context.subscriptions.push(documentListener, activeEditorListener, changeListener);
     // Initialize status bar
     updateStatusBar();
     // Start streaming detection if auto-detect is enabled
@@ -103,26 +115,70 @@ function toggleStreamingMode() {
 function setStreamingMode(enabled) {
     isStreamingModeEnabled = enabled;
     if (enabled) {
-        // Mask all open .env files
+        // Apply masking to all open documents
         vscode.workspace.textDocuments.forEach(document => {
-            envMasker.maskDocument(document);
+            applyMaskingForDocument(document);
         });
     }
     else {
         // Unmask all files
         envMasker.unmaskAll();
+        secretMasker.unmaskAll();
     }
     updateStatusBar();
 }
+function applyMaskingForDocument(document) {
+    // Always run secret masker to catch high-entropy/API keys in any file (including .env)
+    secretMasker.maskDocument(document);
+    // Optionally mask all values in .env files if user enabled it
+    if (hideAllEnvVariables) {
+        envMasker.maskDocument(document);
+    }
+    else {
+        // Ensure any existing env masks are cleared if user turned the option off
+        envMasker.unmaskDocument(document);
+    }
+}
+async function showStatusBarMenu() {
+    const streamingLabel = isStreamingModeEnabled ? 'Disable Streaming Mode' : 'Enable Streaming Mode';
+    const hideAllLabel = `${hideAllEnvVariables ? '$(check)' : '$(circle-large-outline)'} Hide all environment variables`;
+    const items = [
+        { id: 'toggleStreaming', label: `$(eye${isStreamingModeEnabled ? '' : '-closed'}) ${streamingLabel}` },
+        { id: 'toggleHideAllEnv', label: hideAllLabel }
+    ];
+    const picked = await vscode.window.showQuickPick(items, {
+        placeHolder: 'Streaming Mode options',
+        canPickMany: false
+    });
+    if (!picked)
+        return;
+    if (picked.id === 'toggleStreaming') {
+        toggleStreamingMode();
+    }
+    else if (picked.id === 'toggleHideAllEnv') {
+        hideAllEnvVariables = !hideAllEnvVariables;
+        if (isStreamingModeEnabled) {
+            // Re-apply env masking as per the new preference
+            if (hideAllEnvVariables) {
+                vscode.workspace.textDocuments.forEach(doc => envMasker.maskDocument(doc));
+            }
+            else {
+                envMasker.unmaskAll();
+            }
+        }
+        updateStatusBar();
+    }
+}
 function updateStatusBar() {
     if (isStreamingModeEnabled) {
-        statusBarItem.text = '$(eye-closed) Streaming';
-        statusBarItem.tooltip = 'Streaming Mode: ON - Click to toggle';
+        const envSuffix = hideAllEnvVariables ? ' (env: all)' : '';
+        statusBarItem.text = `$(eye-closed) Streaming${envSuffix}`;
+        statusBarItem.tooltip = 'Streaming Mode: ON - Click to open menu';
         statusBarItem.backgroundColor = new vscode.ThemeColor('statusBarItem.warningBackground');
     }
     else {
         statusBarItem.text = '$(eye) Streaming';
-        statusBarItem.tooltip = 'Streaming Mode: OFF - Click to toggle';
+        statusBarItem.tooltip = 'Streaming Mode: OFF - Click to open menu';
         statusBarItem.backgroundColor = undefined;
     }
     statusBarItem.show();
@@ -133,6 +189,9 @@ function deactivate() {
     }
     if (envMasker) {
         envMasker.dispose();
+    }
+    if (secretMasker) {
+        secretMasker.dispose();
     }
 }
 exports.deactivate = deactivate;
