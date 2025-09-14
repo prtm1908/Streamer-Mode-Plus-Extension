@@ -1,12 +1,12 @@
 # Streamer Mode Plus Extension
 
-A VS Code extension that automatically detects streaming software and masks sensitive content in `.env` files and high-entropy API keys in code to protect secrets during live coding sessions.
+A VS Code extension that automatically detects streaming software and masks API keys and secrets in code to protect secrets during live coding sessions.
 
 ## Features
 
 - **Automatic Detection**: Monitors running processes to detect popular streaming software like OBS Studio, Streamlabs, and XSplit.
-- **Smart Masking (.env)**: By default, only masks detected API keys and high‑entropy secrets in `.env` files (keeps regular values like names, ports visible). Optionally, enable “Hide all environment variables” to mask all values.
-- **Secret Masking (code)**: Detects and masks high-entropy secrets assigned to sensitive keys (e.g., `api_key`, `token`, `secret`, `credential`, `auth`) in any file based on a ruleset inspired by GitGuardian’s Generic High Entropy detector
+- **Smart Secret Detection**: Automatically detects and masks high-entropy API keys and secrets in both `.env` files and code files using GitGuardian-inspired detection rules
+- **Granular .env Control**: In `.env` files, by default only masks detected secrets (keeps regular values like names, ports visible). Optionally, enable "Hide all environment variables" to mask all values
 - **Manual Toggle**: Status bar button to manually enable/disable streamer mode
 - **Configurable**: Customize detection settings and streaming software list
 
@@ -14,9 +14,10 @@ A VS Code extension that automatically detects streaming software and masks sens
 
 1. **Process Detection**: The extension periodically scans running processes for known streaming applications
 2. **Auto-Activation**: When streaming software is detected, it automatically enables streamer mode
-3. **Content Masking**: 
-   - `.env` files: By default, only API keys/high‑entropy secrets are masked. Use the status bar menu to enable “Hide all environment variables” and mask all values.
-   - Code files: High-entropy secrets are detected and only the secret substring is masked
+3. **Secret Masking**:
+   - Automatically detects and masks high-entropy API keys and secrets across both `.env` files and code files
+   - `.env` files: By default, only detected secrets are masked. Use the status bar menu to enable "Hide all environment variables" and mask all values
+   - Code files: High-entropy secrets assigned to sensitive identifiers are detected and only the secret substring is masked
 4. **Visual Feedback**: Status bar shows current streamer mode state with eye icons
 
 ## Commands
@@ -45,9 +46,9 @@ Default detected processes (tight to avoid false positives):
 
 1. Install and activate the extension
 2. Open any `.env` file
-3. Start your streaming software (OBS, etc.) 
-4. The extension will automatically detect it and mask your `.env` values
-5. Use the status bar button (eye icon) to open the menu and optionally enable “Hide all environment variables”
+3. Start your streaming software (OBS, etc.)
+4. The extension will automatically detect it and mask detected secrets in your files
+5. Use the status bar button (eye icon) to open the menu and optionally enable "Hide all environment variables" for complete .env masking
 
 ## Development
 
@@ -69,7 +70,7 @@ The extension automatically masks content in files with these patterns:
 - `.env.test`
 - Any file containing `.env.` in the name
 
-Additionally, high-entropy secret masking runs across all open text documents to catch code-side assignments.
+Additionally, high-entropy secret detection runs across all open text documents to catch API keys and secrets in code assignments.
 
 ## Secret Detection Rules (Code)
 
