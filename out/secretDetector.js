@@ -287,10 +287,13 @@ class GenericSecretDetector {
         const digitCount = (value.match(/\d/g) || []).length;
         if (digitCount < GenericSecretDetector.minDigits)
             return false;
-        // Value banlist
-        for (const r of GenericSecretDetector.valueBanlist) {
-            if (r.test(value))
-                return false;
+        // Value banlist (skip if value clearly matches a known API key format)
+        const matchesKnownKey = GenericSecretDetector.knownKeyPatterns.some(r => r.test(value));
+        if (!matchesKnownKey) {
+            for (const r of GenericSecretDetector.valueBanlist) {
+                if (r.test(value))
+                    return false;
+            }
         }
         // Context banlists
         for (const r of GenericSecretDetector.contextBanlistLeft) {
@@ -342,7 +345,7 @@ class GenericSecretDetector {
 }
 exports.GenericSecretDetector = GenericSecretDetector;
 // Sensitive identifier keywords as a reusable string pattern
-// Includes suffix-delimited KEY (e.g., SOME_KEY), while avoiding words like "monkey" via word boundary
+// Spec keywords plus common suffix-delimited KEY (e.g., SOME_KEY), avoiding 'monkey' via boundary
 GenericSecretDetector.sensitiveKeyPattern = '(?:secret|token|api[_.-]?key|credential|auth|[_.-]key\\b)';
 GenericSecretDetector.sensitiveKey = new RegExp(GenericSecretDetector.sensitiveKeyPattern, 'i');
 // Assignment tokens to consider (order matters for multi-char tokens)
@@ -352,6 +355,11 @@ GenericSecretDetector.assignmentTokens = [":=", "=>", "<-", ":", "="];
 GenericSecretDetector.valueRegex = new RegExp(String.raw `^[A-Za-z0-9_.+\/~$-](?:[A-Za-z0-9_.+\/=~$-]|\\(?![ntr"])){14,1022}[A-Za-z0-9_.+\/=~$-]$`);
 // Post validators
 GenericSecretDetector.minDigits = 2;
+// Known API key/token patterns to override conservative banlists (e.g., 'fake', 'example')
+GenericSecretDetector.knownKeyPatterns = [
+    /^sk-[A-Za-z0-9_-]{16,}$/,
+    /^gsk_[A-Za-z0-9_-]{16,}$/, // Groq-style keys
+];
 GenericSecretDetector.valueBanlist = [
     /^id[_.-]/i,
     /^mid[_.-]/i,

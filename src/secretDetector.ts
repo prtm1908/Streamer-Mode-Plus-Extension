@@ -11,7 +11,7 @@ export interface SecretFinding {
 // focused on assignments and common code patterns.
 export class GenericSecretDetector {
     // Sensitive identifier keywords as a reusable string pattern
-    // Includes suffix-delimited KEY (e.g., SOME_KEY), while avoiding words like "monkey" via word boundary
+    // Spec keywords plus common suffix-delimited KEY (e.g., SOME_KEY), avoiding 'monkey' via boundary
     private static readonly sensitiveKeyPattern = '(?:secret|token|api[_.-]?key|credential|auth|[_.-]key\\b)';
     private static readonly sensitiveKey = new RegExp(GenericSecretDetector.sensitiveKeyPattern, 'i');
 
@@ -26,6 +26,12 @@ export class GenericSecretDetector {
 
     // Post validators
     private static readonly minDigits = 2;
+
+    // Known API key/token patterns to override conservative banlists (e.g., 'fake', 'example')
+    private static readonly knownKeyPatterns: RegExp[] = [
+        /^sk-[A-Za-z0-9_-]{16,}$/,   // OpenAI-style keys
+        /^gsk_[A-Za-z0-9_-]{16,}$/,  // Groq-style keys
+    ];
 
     private static readonly valueBanlist: RegExp[] = [
         /^id[_.-]/i,
@@ -445,9 +451,12 @@ export class GenericSecretDetector {
         const digitCount = (value.match(/\d/g) || []).length;
         if (digitCount < GenericSecretDetector.minDigits) return false;
 
-        // Value banlist
-        for (const r of GenericSecretDetector.valueBanlist) {
-            if (r.test(value)) return false;
+        // Value banlist (skip if value clearly matches a known API key format)
+        const matchesKnownKey = GenericSecretDetector.knownKeyPatterns.some(r => r.test(value));
+        if (!matchesKnownKey) {
+            for (const r of GenericSecretDetector.valueBanlist) {
+                if (r.test(value)) return false;
+            }
         }
 
         // Context banlists
