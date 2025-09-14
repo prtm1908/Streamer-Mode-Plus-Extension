@@ -31,6 +31,7 @@ class GenericSecretDetector {
     findInDocument(document) {
         // PreValidators: Filename banlist
         const filePath = (document.fileName || '').toLowerCase();
+        const isEnvDoc = this.isEnvFilename(filePath);
         const filenameBanlist = [
             /(^|[\/\\])hash([\/\\]|$)/,
             /(^|[\/\\])list[\/\\]k\.txt$/,
@@ -46,7 +47,10 @@ class GenericSecretDetector {
         for (let lineIndex = 0; lineIndex < document.lineCount; lineIndex++) {
             const line = document.lineAt(lineIndex).text;
             // Always check for standalone high-entropy secrets
-            this.matchStandaloneAnywhere(document, lineIndex, line, findings);
+            // For .env-like files, skip standalone scan to avoid masking keys (left of '=')
+            if (!isEnvDoc) {
+                this.matchStandaloneAnywhere(document, lineIndex, line, findings);
+            }
             // If line contains a sensitive key, also try assignment-based rules
             if (GenericSecretDetector.sensitiveKey.test(line)) {
                 this.matchIdentifierAssignment(document, lineIndex, line, findings);
@@ -57,6 +61,14 @@ class GenericSecretDetector {
             }
         }
         return findings;
+    }
+    isEnvFilename(filePath) {
+        return filePath.endsWith('.env') ||
+            filePath.endsWith('.env.local') ||
+            filePath.endsWith('.env.development') ||
+            filePath.endsWith('.env.production') ||
+            filePath.endsWith('.env.test') ||
+            filePath.includes('.env.');
     }
     // Standalone detector: find high-entropy secrets anywhere in the line
     matchStandaloneAnywhere(document, lineIndex, line, findings) {

@@ -5,7 +5,7 @@ A VS Code extension that automatically detects streaming software and masks sens
 ## Features
 
 - **Automatic Detection**: Monitors running processes to detect popular streaming software like OBS Studio, Streamlabs, and XSplit.
-- **Smart Masking (.env)**: Automatically blurs/masks values in `.env` files while keeping variable names visible
+- **Smart Masking (.env)**: By default, only masks detected API keys and high‑entropy secrets in `.env` files (keeps regular values like names, ports visible). Optionally, enable “Hide all environment variables” to mask all values.
 - **Secret Masking (code)**: Detects and masks high-entropy secrets assigned to sensitive keys (e.g., `api_key`, `token`, `secret`, `credential`, `auth`) in any file based on a ruleset inspired by GitGuardian’s Generic High Entropy detector
 - **Manual Toggle**: Status bar button to manually enable/disable streaming mode
 - **Configurable**: Customize detection settings and streaming software list
@@ -15,12 +15,15 @@ A VS Code extension that automatically detects streaming software and masks sens
 1. **Process Detection**: The extension periodically scans running processes for known streaming applications
 2. **Auto-Activation**: When streaming software is detected, it automatically enables streaming mode
 3. **Content Masking**: 
-   - `.env` file values are masked with dots (••••••••••••) while keeping the variable names visible
-   - High-entropy secrets in code are detected and only the secret substring is masked
+   - `.env` files: By default, only API keys/high‑entropy secrets are masked. Use the status bar menu to enable “Hide all environment variables” and mask all values.
+   - Code files: High-entropy secrets are detected and only the secret substring is masked
 4. **Visual Feedback**: Status bar shows current streaming mode state with eye icons
 
 ## Commands
 
+- `Streaming Mode: Menu` (status bar) — opens a menu with:
+  - Toggle Streaming Mode (on/off)
+  - Hide all environment variables (checkbox)
 - `Toggle Streaming Mode` - Manually toggle streaming mode on/off
 - `Enable Streaming Mode` - Force enable streaming mode
 - `Disable Streaming Mode` - Force disable streaming mode
@@ -44,7 +47,7 @@ Default detected processes (tight to avoid false positives):
 2. Open any `.env` file
 3. Start your streaming software (OBS, etc.) 
 4. The extension will automatically detect it and mask your `.env` values
-5. Use the status bar button (eye icon) to manually toggle if needed
+5. Use the status bar button (eye icon) to open the menu and optionally enable “Hide all environment variables”
 
 ## Development
 

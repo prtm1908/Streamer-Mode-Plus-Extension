@@ -35,6 +35,10 @@
   "contributes": {
     "commands": [
       {
+        "command": "streamingMode.menu",
+        "title": "Streaming Mode: Menu"
+      },
+      {
         "command": "streamingMode.toggle",
         "title": "Toggle Streaming Mode"
       },
