@@ -2,7 +2,7 @@
   "name": "streaming-mode-extension",
   "displayName": "Streamer Mode Plus",
   "description": "Automatically detects streaming software and masks sensitive file content (API keys, secrets, etc.)",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "publisher": "GeekRoom",
   "engines": {
     "vscode": "^1.74.0"
