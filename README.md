@@ -60,18 +60,6 @@ To run the extension in development:
 4. Press F5 to launch Extension Development Host
 5. Open a `.env` file to test masking functionality
 
-## File Types Supported
-
-The extension automatically masks content in files with these patterns:
-- `.env`
-- `.env.local`
-- `.env.development`
-- `.env.production`
-- `.env.test`
-- Any file containing `.env.` in the name
-
-Additionally, high-entropy secret detection runs across all open text documents to catch API keys and secrets in code assignments.
-
 ## Secret Detection Rules (Code)
 
 The secret detector focuses on assignments where the assigned identifier contains one of: `secret`, `token`, `api[_.-]?key`, `credential`, or `auth`. It considers assignment tokens `:`, `=`, `:=`, `=>`, `,`, `(`, and `<-`, covering patterns such as:
